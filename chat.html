@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nevaria AI Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+
+        /* Custom focus styles */
+        .btn-focus:focus, .btn-focus:hover {
+            outline: none;
+            color: #6366f1;
+            transform: scale(1.1);
+            transition: all 0.3s ease;
+        }
+
+        /* Typing animation */
+        @keyframes typingAnimation { 
+            0% { transform: translateY(0); } 
+            50% { transform: translateY(-5px); } 
+            100% { transform: translateY(0); } 
+        }
+        
+        .typing-indicator span { 
+            display: inline-block; 
+            width: 8px; 
+            height: 8px; 
+            margin: 0 2px; 
+            background-color: #6366f1; 
+            border-radius: 50%; 
+            animation: typingAnimation 1.2s infinite; 
+        }
+        
+        .typing-indicator span:nth-child(2) { 
+            animation-delay: 0.2s; 
+        }
+        
+        .typing-indicator span:nth-child(3) { 
+            animation-delay: 0.4s; 
+        }
+
+        /* Fading animations */
+        .fade-out { 
+            opacity: 0; 
+            transition: opacity 0.5s ease-in-out; 
+        }
+        
+        .fade-in { 
+            opacity: 1; 
+            transition: opacity 0.5s ease-in-out; 
+        }
+
+        /* Message animations */
+        .message-enter { 
+            opacity: 0; 
+            transform: translateY(10px); 
+            animation: messageFade 0.4s ease-out forwards; 
+        }
+        
+        @keyframes messageFade { 
+            from { 
+                opacity: 0; 
+                transform: translateY(10px); 
+            } 
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            } 
+        }
+
+        /* Button animations */
+        #sendBtn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #sendBtn:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        #sendBtn.active:after {
+            opacity: 0.4;
+            animation: pulse 1.5s infinite;
+        }
+        
+        #sendBtn i { 
+            color: white; 
+            transition: color 0.3s ease, transform 0.3s ease; 
+        }
+        
+        #sendBtn.active i { 
+            color: #6366f1; 
+            transform: scale(1.2); 
+        }
+
+        /* Delete animation */
+        .delete-animation { 
+            opacity: 0; 
+            transform: translateY(-10px); 
+            transition: opacity 0.5s ease, transform 0.5s ease; 
+        }
+
+        /* Clear chat button animation */
+        #clearChat { 
+            transition: all 0.3s ease; 
+        }
+        
+        #clearChat:hover, #clearChat:focus { 
+            color: #ff4d4d; 
+            transform: scale(1.2); 
+        }
+
+        /* Profile image animations */
+        .profile-img {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 4px solid #6366f1;
+            padding: 3px;
+            background: #1e1e1e;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+        }
+
+        .profile-img:hover {
+            transform: scale(1.1) rotate(5deg);
+            border-color: #ec4899;
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.7);
+        }
+
+        /* Message styling */
+        .user-message {
+            background: linear-gradient(135deg, #4338ca, #6366f1);
+            border-radius: 18px 18px 0 18px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            transform-origin: right;
+        }
+
+        .bot-message {
+            background: #2a2a2a;
+            border-radius: 18px 18px 18px 0;
+            border-left: 3px solid #6366f1;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transform-origin: left;
+        }
+
+        /* Input field animation */
+        #chatInput {
+            transition: all 0.3s ease;
+            border: 2px solid #1f1f1f;
+        }
+        
+        #chatInput:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Floating animation */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .floating-animation {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        /* Theme colors */
+        .theme-indicator {
+            display: inline-block;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            margin-right: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .theme-indicator:hover {
+            transform: scale(1.3);
+        }
+
+        /* Options menu animation */
+        #optionsMenu {
+            transform: translateY(-10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        #optionsMenu.show {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Button ripple effect */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ripple-btn .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Sparkle effect for AI responses */
+        .sparkle {
+            position: absolute;
+            background: rgba(99, 102, 241, 0.8);
+            border-radius: 50%;
+            transform: scale(0);
+        }
+        
+        @keyframes sparkle {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Wave animation for status */
+        .wave {
+            animation-name: wave-animation;
+            animation-duration: 3s;
+            animation-iteration-count: infinite;
+            transform-origin: 75% 50%;
+        }
+        
+        @keyframes wave-animation {
+            0% { transform: rotate(0deg); }
+            10% { transform: rotate(14deg); }
+            20% { transform: rotate(-8deg); }
+            30% { transform: rotate(14deg); }
+            40% { transform: rotate(-4deg); }
+            50% { transform: rotate(10deg); }
+            60% { transform: rotate(0deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* Gradient background */
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e1e1e, #121212);
+        }
+
+        /* Code block styling */
+        pre[class*="language-"] {
+            border-radius: 8px;
+            margin: 1.5em 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border-left: 4px solid #6366f1;
+        }
+    </style>
+ </head>
+ <body class="bg-gray-900 flex flex-col justify-between h-screen w-full">
+  <div class="relative flex flex-col items-center justify-center flex-grow space-y-4 py-8 animate__animated animate__fadeIn">
+        <img src="https://files.catbox.moe/4i57c7.jpg" alt="Profile" class="profile-img floating-animation">
+   <p class="text-center text-white font-semibold tracking-wide text-2xl md:text-3xl lg:text-4xl">
+            Hai, saya <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-pink-500">Nevaria AI</span>
+        </p>
+   <p id="status" class="text-gray-400 flex items-center text-lg md:text-xl lg:text-2xl">
+            <span class="wave mr-2">👋</span> Apa yang bisa saya bantu hari ini?
+        </p>
+        <div class="flex space-x-3 mt-2">
+            <div class="theme-indicator bg-indigo-500 pulse-animation" data-theme="indigo"></div>
+            <div class="theme-indicator bg-pink-500" data-theme="pink"></div>
+            <div class="theme-indicator bg-emerald-500" data-theme="emerald"></div>
+        </div>
+  </div>
+  <div id="chatBox" class="flex flex-col w-full max-w-3xl mx-auto overflow-y-auto h-[400px] md:h-[550px] lg:h-[700px] px-6 py-4 rounded-t-xl bg-gray-800 shadow-xl"></div>
+  <div id="previewContainer" class="w-full max-w-3xl mx-auto px-5 hidden shadow-lg rounded-xl bg-gray-800 py-4 border border-gray-700"></div>
+  <div class="w-full max-w-3xl mx-auto px-5 py-3 flex items-center bg-gray-800 space-x-3 rounded-b-xl shadow-xl">
+   <input id="chatInput" class="flex-grow px-5 py-4 text-base md:text-xl rounded-full border border-gray-700 bg-gray-900 text-white focus:outline-none" placeholder="Ketik pesan..." type="text"/>
+   <button id="uploadBtn" class="text-lg p-4 bg-gray-900 rounded-full text-white btn-focus ripple-btn hover:bg-gray-800 transition-all"><i class="fas fa-image"></i></button>
+   <button id="sendBtn" class="text-lg p-4 bg-indigo-600 rounded-full text-white ripple-btn hover:bg-indigo-700 transition-all"><i class="fas fa-paper-plane"></i></button>
+  </div>
+  <div class="w-full max-w-3xl mx-auto px-6 py-3 flex items-center justify-between space-x-4 bg-gray-800 rounded-xl mt-3 mb-4 shadow-xl">
+   <div class="flex space-x-4">
+    <button id="documentUploadBtn" class="flex items-center space-x-2 text-gray-400 text-sm md:text-base btn-focus ripple-btn hover:text-indigo-400 transition-all">
+     <i class="fas fa-paperclip"></i><span>Unggah</span>
+    </button>
+    <button id="searchBtn" class="flex items-center space-x-2 text-gray-400 text-sm md:text-base btn-focus ripple-btn hover:text-indigo-400 transition-all">
+     <i class="fas fa-globe"></i><span>Cari</span>
+    </button>
+   </div>
+   <a href="index.html" class="flex items-center space-x-2 text-gray-400 text-sm md:text-base hover:text-indigo-400 transition-all">
+    <i class="fas fa-home"></i><span>Beranda</span>
+   </a>
+  </div>
+  <input type="file" id="imageInput" accept="image/*" class="hidden">
+  <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt" class="hidden">
+  <button id="optionsBtn" class="absolute top-4 right-4 text-gray-400 hover:text-indigo-500 text-2xl md:text-3xl transition-transform hover:scale-110">
+    <i class="fas fa-ellipsis-v"></i>
+  </button>
+  <div id="optionsMenu" class="hidden absolute top-14 right-4 bg-gray-800 text-white rounded-lg shadow-lg w-48 border border-gray-700 z-50">
+    <button id="newSession" class="w-full text-left px-4 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-2">
+     <i class="fas fa-plus-circle text-indigo-400"></i>
+     <span>Sesi baru</span>
+    </button>
+    <button id="clearChat" class="w-full text-left px-4 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-2">
+     <i class="fas fa-trash text-indigo-400"></i>
+     <span>Hapus percakapan</span>
+    </button>
+    <button id="themeToggle" class="w-full text-left px-4 py-3 hover:bg-gray-700 transition-colors flex items-center space-x-2">
+     <i class="fas fa-palette text-indigo-400"></i>
+     <span>Ubah tema</span>
+    </button>
+  </div>
+<footer class="w-full py-4 bg-gray-800 mt-auto border-t border-gray-700">
+            <p class="text-center text-gray-400">&copy; 2025 - Future Years 
+            <span class="text-pink-500">Nevaria</span><span class="text-indigo-500">Ai</span> - 
+            Powered By <a href="https://t.me/aloraaxc" class="hover:text-indigo-400 transition-colors">Vynnox ZcoderX</a>
+        </p>
+        </footer>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="scift.js"></script>
+  <script language="javascript">
+    <!--
+    var rev = "fwd";
+    function titlebar(val)
+    {
+        var msg  = " Nevaria AI - Your Intelligent Assistant ";
+        var res = " ";
+        var speed = 100;
+        var pos = val;
+
+        msg = "   >>---"+msg+" ---<<";
+        var le = msg.length;
+        if(rev == "fwd"){
+            if(pos < le){
+            pos = pos+1;
+            scroll = msg.substr(0,pos);
+            document.title = scroll;
+            timer = window.setTimeout("titlebar("+pos+")",speed);
+            }
+            else{
+            rev = "bwd";
+            timer = window.setTimeout("titlebar("+pos+")",speed);
+            }
+        }
+        else{
+            if(pos > 0){
+            pos = pos-1;
+            var ale = le-pos;
+            scrol = msg.substr(ale,le);
+            document.title = scrol;
+            timer = window.setTimeout("titlebar("+pos+")",speed);
+            }
+            else{
+            rev = "fwd";
+            timer = window.setTimeout("titlebar("+pos+")",speed);
+            }   
+        }
+    }
+
+    titlebar(0);
+
+    // Add ripple effect to buttons
+    document.querySelectorAll('.ripple-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            const x = e.clientX - e.target.getBoundingClientRect().left;
+            const y = e.clientY - e.target.getBoundingClientRect().top;
+            
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+
+    // Theme selector
+    document.querySelectorAll('.theme-indicator').forEach(theme => {
+        theme.addEventListener('click', function() {
+            const themeColor = this.getAttribute('data-theme');
+            
+            // Remove pulse from all indicators
+            document.querySelectorAll('.theme-indicator').forEach(t => {
+                t.classList.remove('pulse-animation');
+            });
+            
+            // Add pulse to selected theme
+            this.classList.add('pulse-animation');
+            
+            // Update UI with selected theme
+            updateTheme(themeColor);
+        });
+    });
+
+    function updateTheme(theme) {
+        const root = document.documentElement;
+        let primary, secondary;
+        
+        switch(theme) {
+            case 'indigo':
+                primary = '#6366f1';
+                secondary = '#4f46e5';
+                break;
+            case 'pink':
+                primary = '#ec4899';
+                secondary = '#db2777';
+                break;
+            case 'emerald':
+                primary = '#10b981';
+                secondary = '#059669';
+                break;
+            default:
+                primary = '#6366f1';
+                secondary = '#4f46e5';
+        }
+        
+        // Update send button
+        const sendBtn = document.getElementById('sendBtn');
+        sendBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'bg-pink-600', 'hover:bg-pink-700', 'bg-emerald-600', 'hover:bg-emerald-700');
+        
+        if (theme === 'indigo') {
+            sendBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+        } else if (theme === 'pink') {
+            sendBtn.classList.add('bg-pink-600', 'hover:bg-pink-700');
+        } else if (theme === 'emerald') {
+            sendBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+        }
+        
+        // You could also dynamically update other UI elements here
+        document.querySelectorAll('.bot-message').forEach(msg => {
+            msg.style.borderLeftColor = primary;
+        });
+    }
+
+    // Toggle menu visibility with animation
+    document.getElementById('optionsBtn').addEventListener('click', function() {
+        const menu = document.getElementById('optionsMenu');
+        menu.classList.toggle('hidden');
+        menu.classList.toggle('show');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('optionsMenu');
+        const optionsBtn = document.getElementById('optionsBtn');
+        
+        if (!menu.contains(e.target) && !optionsBtn.contains(e.target) && !menu.classList.contains('hidden')) {
+            menu.classList.add('hidden');
+            menu.classList.remove('show');
+        }
+    });
+    //-->
+  </script>
+
+</body>
+</html>
+
